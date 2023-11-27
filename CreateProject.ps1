@@ -15,7 +15,21 @@ public class Program
 {
     public static void Main()
     {
-        
+        var lines = File.ReadAllLines(@"$path\$folderName\" + "Input.txt");
+    }
+
+    public static int StarOne(string[] lines)
+    {
+
+    }
+
+    public static int StarTwo(string[] lines)
+    {
+
     }
 }
 "@
+
+
+$filePath = Join-Path -Path $path -ChildPath $folderName"\Input.txt"
+New-Item $filePath -ItemType File
