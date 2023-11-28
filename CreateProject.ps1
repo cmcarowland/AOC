@@ -1,4 +1,9 @@
 param($folderName, $path)
+if (Test-Path -Path $path"\"$folderName)
+{
+    Write-Error("Project Already Exists")
+    Exit
+}
 
 New-Item -Path $path -Name $folderName -ItemType Directory
 
@@ -20,12 +25,12 @@ public class Program
 
     public static int StarOne(string[] lines)
     {
-
+        return -1;
     }
 
     public static int StarTwo(string[] lines)
     {
-
+        return -1;
     }
 }
 "@
