@@ -5,6 +5,8 @@ if (Test-Path -Path $path"\"$folderName)
     Exit
 }
 
+. .\Secret.ps1
+
 New-Item -Path $path -Name $folderName -ItemType Directory
 
 $filePath = Join-Path -Path $path -ChildPath $folderName"\"$folderName".cs"
@@ -35,6 +37,12 @@ public class Program
 }
 "@
 
-
 $filePath = Join-Path -Path $path -ChildPath $folderName"\Input.txt"
-New-Item $filePath -ItemType File
+# New-Item $filePath -ItemType File
+$day = $folderName.SubString(3)
+$url =  ('https://adventofcode.com',$path,'day',$day,'input') -join '/'
+$session = GetSession
+$Cookie_final = New-Object System.Net.Cookie('session', $session, '/')
+$newSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$newSession.Cookies.Add($url, $Cookie_final)                                                                                                                     
+Invoke-WebRequest $url -outfile $filePath -WebSession $newSession
