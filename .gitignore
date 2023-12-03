@@ -1,5 +1,6 @@
 */bin
 Secret.ps1
+Secret.txt
 
 *.swp
 *.*~
