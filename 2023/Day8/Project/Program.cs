@@ -45,31 +45,64 @@ public class Program
 
         Console.WriteLine(count);
     }
+
+    static long CalculateGCD (long smaller, long larger)
+    {
+        if (larger < smaller)
+        {
+            long tmp = smaller;
+            smaller = larger;
+            larger = tmp;
+        }
+    
+        //Euclid's Division
+        while (true)
+        {
+            long remainder = larger % smaller;
+            if (remainder == 0)
+                return smaller;
+
+            larger = smaller;
+            smaller = remainder;
+        }
+    }
+
+    static long CalculateLCM (long A, long B)
+    {
+        // LCM(A,B) = (A/GCD(A,B))*B
+        return (A / CalculateGCD(A,B)) * B;
+    }
     
     static void StarTwo()
     {
-        var kvp1 = nodes.First(x => x.Key.EndsWith('A'));
-        var kvp2 = nodes.First(x => x.Key.EndsWith('A') && x.Key != kvp1.Key);
+        var kvps = nodes.Where(x => x.Key.EndsWith('A')).Select(x => x).ToList();
 
-        Console.WriteLine(kvp1);
-        Console.WriteLine(kvp2);
-        return;        
-        // int count = 0;
-        // while(kvp.Key != end.Key)
-        // {
-        //     char nextMove = directions[count % directions.Length];
-        //     if(nextMove == 'L')
-        //     {
-        //         kvp = nodes.First(x => x.Key == kvp.Value.Item1);
-        //     }
-        //     else
-        //     {
-        //         kvp = nodes.First(x => x.Key == kvp.Value.Item2);
-        //     }
+        int[] counts = new int[kvps.Count];
+        for(int i = 0; i < counts.Length; i++)
+        {
+            var currentKvp = kvps.Skip(i).Take(1).First();
+            while(!currentKvp.Key.EndsWith('Z'))
+            {
+                char nextMove = directions[counts[i] % directions.Length];
+                if(nextMove == 'L')
+                {
+                    currentKvp = nodes.First(x => x.Key == currentKvp.Value.Item1);
+                }
+                else
+                {
+                    currentKvp = nodes.First(x => x.Key == currentKvp.Value.Item2);
+                }
 
-        //     count ++;
-        // }
+                counts[i] ++;
+            }
+        }
 
-        // Console.WriteLine(count);
+        long lcm = counts[0];
+        for(int i = 1; i < counts.Length; i ++)
+        {
+            lcm = CalculateLCM(lcm, counts[i]);
+        }
+            
+        Console.WriteLine(lcm);
     }
 }
