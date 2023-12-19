@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel;
 
 class Setting
 {
@@ -10,8 +11,9 @@ class Setting
     public bool lessThan;
     public int value;
     public string nextWorkflow;
+    public Workflow parent;
 
-    public Setting(string s)
+    public Setting(string s, Workflow wf)
     {
         if(s.Contains(':'))
         {
@@ -31,6 +33,8 @@ class Setting
             value = -1;
             nextWorkflow = s;
         }
+
+        parent = wf;
     }
 
     public bool CheckValue(int itemValue)
@@ -64,7 +68,40 @@ class Workflow
         name = split[0];
         var splitSettngs = settingString.Split(',');
         foreach(var set in splitSettngs)
-            settings.Add(new Setting(set));
+            settings.Add(new Setting(set, this));
+    }
+
+    public int CalculatePermutations(Setting setting)
+    {
+        int total = 0;
+        
+        int setIndex = settings.FindIndex(x => x == setting);
+        Console.WriteLine(settings[setIndex]);
+        if(settings[setIndex].value == -1)
+        {
+
+        }
+        else
+        {
+            if(settings[setIndex].lessThan)
+                total = settings[setIndex].value - 1;
+            else
+                total = 4000 - (settings[setIndex].value + 1);
+        }
+        Console.WriteLine("{1} {0} After Initial Value", total, name);
+        
+        for(int i = setIndex - 1; i > -1; i--)
+        {
+            Console.WriteLine("{0} Before Setting {1}", settings[i].value, settings[i].itemType);
+            if(!settings[i].lessThan)
+                total = total == 0 ? settings[i].value : total * settings[i].value;
+            else
+                total = total == 0 ? settings[i].value : total * (4000 - settings[i].value);
+            
+            Console.WriteLine("{0} After Setting {1}", total, settings[i].itemType);
+        }
+
+        return total;
     }
 
     public string GetNextWorkflow(Part value)
@@ -99,7 +136,7 @@ class Workflow
             }
         }
 
-        return "FUCKING FAILED";
+        return "XXX";
     }
 }
 
@@ -147,10 +184,47 @@ class Part
     }
 }
 
+class Range
+{
+    public ulong minX = 1;
+    public ulong maxX = 4000;
+    public ulong minM = 1;
+    public ulong maxM = 4000;
+    public ulong minA = 1;
+    public ulong maxA = 4000;
+    public ulong minS = 1;
+    public ulong maxS = 4000;
+
+    public ulong GetX()
+    {
+        return maxX - minX;
+    }
+
+    public ulong GetM()
+    {
+        return maxM - minM;
+    }
+
+    public ulong GetA()
+    {
+        return maxA - minA;
+    }
+
+    public ulong GetS()
+    {
+        return maxS - minS;
+    }
+
+    public ulong Product()
+    {
+        return GetX() * GetM() * GetA() * GetS();
+    }
+}
+
 class Program
 {
     static string[] lines = new string[0];
-    static List<Workflow> workflows = new List<Workflow>();
+    static public List<Workflow> workflows = new List<Workflow>();
     static List<Part> parts = new List<Part>();
 
     static void Main(string[] argv)
@@ -171,8 +245,8 @@ class Program
                 workflows.Add(new Workflow(line));
         }
        
-        StarOne();
-        //StarTwo();
+        //StarOne();
+        StarTwo();
     }
 
     static void StarOne()
@@ -201,8 +275,33 @@ class Program
 
     static void StarTwo()
     {
-        
+        ulong total = 0;
+        List<Range> ranges = new List<Range>();
 
-        Console.WriteLine(0);
+        foreach(var workflow in workflows)
+        {
+            if(workflow.settings.Count(x => x.nextWorkflow == "A") > 0)
+            {
+                foreach(var setting in workflow.settings.Where(x => x.nextWorkflow == "A").Select(x => x))
+                {
+                    Range r = new Range();
+                    ulong s = (ulong)workflow.CalculatePermutations(setting);
+                    Workflow? nextWf = workflows.First(x => x.settings.Any(y => y.nextWorkflow == workflow.name));
+                    string lastWfName = workflow.name;
+                    
+                    do
+                    {
+                        Console.WriteLine(s);
+                        s *= (ulong)nextWf.CalculatePermutations(nextWf.settings.First(x => x.nextWorkflow == lastWfName));
+                        lastWfName = nextWf.name;
+                        nextWf = workflows.FirstOrDefault(x => x.settings.Any(y => y.nextWorkflow == lastWfName));
+                    }while(nextWf != null);
+                    Console.WriteLine("Workflow {0}", s.ToString("N0"));
+                    ranges.Add(range);
+                }
+            }
+        }
+
+        Console.WriteLine(total.ToString("N0"));
     }
 }
