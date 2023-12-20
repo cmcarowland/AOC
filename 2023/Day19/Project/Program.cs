@@ -71,37 +71,80 @@ class Workflow
             settings.Add(new Setting(set, this));
     }
 
-    public int CalculatePermutations(Setting setting)
-    {
-        int total = 0;
-        
+    public void CalculatePermutations(Setting setting, Range r)
+    {        
         int setIndex = settings.FindIndex(x => x == setting);
-        Console.WriteLine(settings[setIndex]);
-        if(settings[setIndex].value == -1)
+        // Console.WriteLine(settings[setIndex]);
+        if(settings[setIndex].value != -1)
         {
-
+        
+            // total = settings[setIndex].value - 1;
+            if(settings[setIndex].itemType == 'x')
+            {
+                if(settings[setIndex].lessThan)
+                    r.maxX = Math.Min(settings[setIndex].value - 1, r.maxX);
+                else
+                    r.minX = Math.Max(settings[setIndex].value + 1, r.minX);
+            }
+            else if(settings[setIndex].itemType == 'm')
+            {
+                if(settings[setIndex].lessThan)
+                    r.maxM = Math.Min(settings[setIndex].value - 1, r.maxM);
+                else
+                    r.minM = Math.Max(settings[setIndex].value + 1, r.minM);
+            }
+            else if(settings[setIndex].itemType == 'a')
+            {
+                if(settings[setIndex].lessThan)
+                    r.maxA = Math.Min(settings[setIndex].value - 1, r.maxA);
+                else
+                    r.minA = Math.Max(settings[setIndex].value + 1, r.minA);
+            }
+            else if(settings[setIndex].itemType == 's')
+            {
+                if(settings[setIndex].lessThan)
+                    r.maxS = Math.Min(settings[setIndex].value - 1, r.maxS);
+                else
+                    r.minS = Math.Max(settings[setIndex].value + 1, r.minS);
+            }
+            // else
+            // {
+            //     // total = 4000 - (settings[setIndex].value + 1);
+            // }
         }
-        else
-        {
-            if(settings[setIndex].lessThan)
-                total = settings[setIndex].value - 1;
-            else
-                total = 4000 - (settings[setIndex].value + 1);
-        }
-        Console.WriteLine("{1} {0} After Initial Value", total, name);
+        // Console.WriteLine("{1} {0} After Initial Value", total, name);
         
         for(int i = setIndex - 1; i > -1; i--)
         {
-            Console.WriteLine("{0} Before Setting {1}", settings[i].value, settings[i].itemType);
-            if(!settings[i].lessThan)
-                total = total == 0 ? settings[i].value : total * settings[i].value;
-            else
-                total = total == 0 ? settings[i].value : total * (4000 - settings[i].value);
-            
-            Console.WriteLine("{0} After Setting {1}", total, settings[i].itemType);
+            if(settings[i].itemType == 'x')
+            {
+                if(!settings[i].lessThan)
+                    r.maxX = Math.Min(settings[i].value, r.maxX);
+                else
+                    r.minX = Math.Max(settings[i].value, r.minX);
+            }
+            else if(settings[i].itemType == 'm')
+            {
+                if(!settings[i].lessThan)
+                    r.maxM = Math.Min(settings[i].value, r.maxM);
+                else
+                    r.minM = Math.Max(settings[i].value, r.minM);
+            }
+            else if(settings[i].itemType == 'a')
+            {
+                if(!settings[i].lessThan)
+                    r.maxA = Math.Min(settings[i].value, r.maxA);
+                else
+                    r.minA = Math.Max(settings[i].value, r.minA);
+            }
+            else if(settings[i].itemType == 's')
+            {
+                if(!settings[i].lessThan)
+                    r.maxS = Math.Min(settings[i].value, r.maxS);
+                else
+                    r.minS = Math.Max(settings[i].value, r.minS);
+            }
         }
-
-        return total;
     }
 
     public string GetNextWorkflow(Part value)
@@ -173,6 +216,14 @@ class Part
         }
     }
 
+    public Part(int x, int m, int a, int s)
+    {
+        this.x = x;
+        this.m = m;
+        this.a = a;
+        this.s = s;
+    }
+
     public override string ToString()
     {
         return string.Format("{0} {1} {2} {3}", x, m, a, s);
@@ -186,38 +237,47 @@ class Part
 
 class Range
 {
-    public ulong minX = 1;
-    public ulong maxX = 4000;
-    public ulong minM = 1;
-    public ulong maxM = 4000;
-    public ulong minA = 1;
-    public ulong maxA = 4000;
-    public ulong minS = 1;
-    public ulong maxS = 4000;
+    public int minX = 1;
+    public int maxX = 4000;
+    public int minM = 1;
+    public int maxM = 4000;
+    public int minA = 1;
+    public int maxA = 4000;
+    public int minS = 1;
+    public int maxS = 4000;
 
     public ulong GetX()
     {
-        return maxX - minX;
+        return (ulong)(maxX - minX + 1);
     }
 
     public ulong GetM()
     {
-        return maxM - minM;
+        return (ulong)(maxM - minM + 1);
     }
 
     public ulong GetA()
     {
-        return maxA - minA;
+        return (ulong)(maxA - minA + 1);
     }
 
     public ulong GetS()
     {
-        return maxS - minS;
+        return (ulong)(maxS - minS + 1);
     }
 
     public ulong Product()
     {
+        // Console.WriteLine(GetX());
+        // Console.WriteLine(GetM());
+        // Console.WriteLine(GetA());
+        // Console.WriteLine(GetS());
         return GetX() * GetM() * GetA() * GetS();
+    }
+
+    public override string ToString()
+    {
+        return string.Format("X: {0} {1}\nM: {2} {3}\nA: {4} {5}\nS: {6} {7}", minX, maxX, minM, maxM, minA, maxA, minS, maxS);
     }
 }
 
@@ -255,19 +315,11 @@ class Program
         
         foreach(var part in parts)
         {
-            var currentWorkflow = workflows.First(x => x.name == "in");
-            string nextWorkflow = "";
-            do
-            {
-                nextWorkflow = currentWorkflow.GetNextWorkflow(part);
-                currentWorkflow = workflows.FirstOrDefault(x => x.name == nextWorkflow);
-            }while(currentWorkflow != null);
-            if(nextWorkflow == "A")
-            {
-                total += part.Sum();
-                part.isAccepted = true;
-            }
+            CheckPart(part);
         }
+
+        foreach(var part in parts.Where(x => x.isAccepted).Select(x => x))
+            total += part.Sum();
 
         Console.WriteLine(total);
     }
@@ -285,23 +337,46 @@ class Program
                 foreach(var setting in workflow.settings.Where(x => x.nextWorkflow == "A").Select(x => x))
                 {
                     Range r = new Range();
-                    ulong s = (ulong)workflow.CalculatePermutations(setting);
+                    workflow.CalculatePermutations(setting, r);
                     Workflow? nextWf = workflows.First(x => x.settings.Any(y => y.nextWorkflow == workflow.name));
                     string lastWfName = workflow.name;
                     
                     do
                     {
-                        Console.WriteLine(s);
-                        s *= (ulong)nextWf.CalculatePermutations(nextWf.settings.First(x => x.nextWorkflow == lastWfName));
+                        nextWf.CalculatePermutations(nextWf.settings.First(x => x.nextWorkflow == lastWfName), r);
                         lastWfName = nextWf.name;
                         nextWf = workflows.FirstOrDefault(x => x.settings.Any(y => y.nextWorkflow == lastWfName));
                     }while(nextWf != null);
-                    Console.WriteLine("Workflow {0}", s.ToString("N0"));
-                    ranges.Add(range);
+
+                    ranges.Add(r);
                 }
             }
         }
 
-        Console.WriteLine(total.ToString("N0"));
+        foreach(var r in ranges)
+        {
+            total += r.Product();
+        }
+
+        Console.WriteLine(total.ToString("N0"));      
+    }
+
+    static public bool CheckPart(Part p)
+    {
+        var currentWorkflow = workflows.First(x => x.name == "in");
+        string nextWorkflow = "";
+        do
+        {
+            nextWorkflow = currentWorkflow.GetNextWorkflow(p);
+            // Console.WriteLine(currentWorkflow.name);
+            currentWorkflow = workflows.FirstOrDefault(x => x.name == nextWorkflow);
+        }while(currentWorkflow != null);
+        if(nextWorkflow == "A")
+        {
+            p.isAccepted = true;
+            return true;
+        }
+
+        return false;
     }
 }
