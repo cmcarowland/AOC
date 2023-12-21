@@ -26,6 +26,7 @@ class Cell
 {
     public Color? color;
     public bool isBorder;
+    public bool isInside = false;
 
     public Cell()
     {
@@ -123,6 +124,7 @@ class Grid
                 else if(isDigging && GetCell(r, c).color == null)
                 {
                     GetCell(r, c).color = new Color("000000");
+                    GetCell(r, c).isInside = true;
                 }
                 else if(isDigging)
                 {
@@ -134,6 +136,11 @@ class Grid
                     else if(isInside)
                     {
                         c += numberOfTrenches - 1;
+                        if(!GetCell(r - 1, c + 1).isInside)
+                        {
+                            isDigging = false;
+                            isInside = false;
+                        }
                     }
                     else
                     {

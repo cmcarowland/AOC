@@ -12,6 +12,13 @@ class Program
     static void Main(string[] argv)
     {
         lines = File.ReadAllLines(argv[0]);
+        
+        //StarOne();
+        StarTwo();
+    }
+
+    static void StarOne()
+    {
         int lr = 0;
         int ud = 0;
         int maxLeft = 0;
@@ -44,12 +51,6 @@ class Program
         // Console.WriteLine("Left :{0} Right :{1} Up :{2} Down:{3}\nWidth :{4}  Height :{5}", maxLeft, maxRight, maxUp, maxDown, Math.Abs(maxLeft) + maxRight, Math.Abs(maxDown) + maxUp);
         g = new Grid((Math.Abs(maxLeft) + maxRight + 1) * 2, (Math.Abs(maxDown) + maxUp + 1) * 2);
 
-        StarOne();
-        //StarTwo();
-    }
-
-    static void StarOne()
-    {
         int total = 0;
         int currentRow = g.height / 2;
         int currentCol = g.width / 2;
@@ -126,8 +127,53 @@ class Program
 
     static void StarTwo()
     {
-        
+        int total = 0;
+        int lr = 0;
+        int ud = 0;
+        int maxLeft = 0;
+        int maxRight = 0;
+        int maxUp = 0;
+        int maxDown = 0;
+        foreach(var line in lines)
+        {
+            var split = line.Split('#');
+            // Console.WriteLine(split[1].Replace(")", ""));
+            int valueToMove = int.Parse(string.Join("", split[1].Take(5)), System.Globalization.NumberStyles.HexNumber);
+            switch(split[1].Replace(")", "").Last())
+            {
+                case '0':
+                    lr += valueToMove;
+                    maxRight = Math.Max(maxRight, lr);
+                    break;
+                case '1':
+                    ud -= valueToMove;
+                    maxDown = Math.Min(maxDown, ud);
+                    break;
+                case '2':
+                    lr -= valueToMove;
+                    maxLeft = Math.Min(maxLeft, lr);
+                    break;
+                case '3':
+                    ud += valueToMove;
+                    maxUp = Math.Max(maxUp, ud);
+                    break;
+            }
+        }
+        Console.WriteLine("Left :{0} Right :{1} Up :{2} Down:{3}\nWidth :{4}  Height :{5}", maxLeft, maxRight, maxUp, maxDown, Math.Abs(maxLeft) + maxRight, Math.Abs(maxDown) + maxUp);
+        Console.WriteLine((Math.Abs(maxLeft) + maxRight + 1) * (Math.Abs(maxDown) + maxUp + 1));
+        g = new Grid(Math.Abs(maxLeft) + maxRight + 1, Math.Abs(maxDown) + maxUp + 1);
 
-        Console.WriteLine(0);
+        g.FillArea();
+        // StringBuilder sb = new StringBuilder();
+        // sb.AppendLine(g.ToString());
+        // File.WriteAllText("Out.txt", sb.ToString());
+
+        foreach(var cell in g.cells)
+        {
+            if(cell.color != null)
+                total ++;
+        }
+
+        Console.WriteLine(total);
     }
 }
