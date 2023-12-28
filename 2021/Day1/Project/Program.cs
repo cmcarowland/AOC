@@ -30,7 +30,16 @@ public class Program
 
     public static void StarTwo()
     {
-        
+        int count = 0;
+        var numbers = lines.Select(x => int.Parse(x)).ToArray();
+        for(int i = 0; i < numbers.Length - 3; i++)
+        {
+            // Console.WriteLine("{0} {1}", numbers.Skip(i).Take(3).Sum(), numbers.Skip(i + 1).Take(3).Sum());
+            if(numbers.Skip(i).Take(3).Sum() < numbers.Skip(i + 1).Take(3).Sum())
+                count++;
+        }
+
+        Console.WriteLine("Star 2 Increases : {0}", count);
     }
 }
 
