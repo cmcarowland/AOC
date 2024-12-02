@@ -54,13 +54,38 @@ fn pt1(filename : &str) {
         let parts : Vec<i64> = line.split(" ").map(|n| n.parse::<i64>().unwrap()).collect();
         if is_safe(&parts) {
             safe_lines += 1;
-            println!("Safe : {}", line);
+            //println!("Safe : {}", line);
         }
     }
 
-    println!("Safe Lines : {}", safe_lines);
+    println!("Safe Lines Pt 1 : {}", safe_lines);
 }
 
 fn pt2(filename : &str) {
     let lines = read_lines(filename);
+    let mut safe_lines : usize = 0;
+
+    for line in lines.iter() {
+        let parts : Vec<i64> = line.split(" ").map(|n| n.parse::<i64>().unwrap()).collect();
+        if is_safe(&parts) {
+            safe_lines += 1;
+            // println!("Safe : {}", line);
+            continue;
+        }
+        for i in 0..parts.len() {
+            let mut local = parts.clone();
+            local.remove(i);
+            // for x in local.iter() {
+            //     print!("{} ", x);
+            // }
+            // println!();
+            if is_safe(&local) {
+                safe_lines += 1;
+                //println!("Safe : {}", line);
+                break;
+            }
+        }
+    }
+
+    println!("Safe Lines Pt 2 : {}", safe_lines);
 }
