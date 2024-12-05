@@ -44,7 +44,7 @@ fn pt2(filename : &str) {
 
     let mut i : usize = 0;
     while i < input.len() {
-        println!("i: {} total: {}", i, total);
+        // println!("i: {} total: {}", i, total);
         // println!("{}", &input[i..]);
         let next_mul = re.find(&input[i..]);
         let next_do = do_enable.find(&input[i..]);
@@ -56,32 +56,32 @@ fn pt2(filename : &str) {
                 if next_dont != None {
                     if next_mul.unwrap().start() < next_dont.unwrap().start() {
                         (_, [first, second]) = re.captures(&input[i..]).map(|c| c.extract()).unwrap();
-                        println!("[*] Perform Mul {} {}", first, second);
+                        // println!("[*] Perform Mul {} {}", first, second);
                         total += first.parse::<u64>().unwrap() * second.parse::<u64>().unwrap();
                         i += next_mul.unwrap().end();
                         continue;
                     } else {
-                        println!("[-] Disable In Mul");
+                        // println!("[-] Disable In Mul");
                         enabled = false;
                         i += next_dont.unwrap().end();
                         continue;
                     }
                 } else {
                     (_, [first, second]) = re.captures(&input[i..]).map(|c| c.extract()).unwrap();
-                    println!("[*] Perform Mul {} {}", first, second);
+                    // println!("[*] Perform Mul {} {}", first, second);
                     total += first.parse::<u64>().unwrap() * second.parse::<u64>().unwrap();
                     i += next_mul.unwrap().end();
                     continue;
                 }
             } else if next_dont != None {
-                println!("[-] Disable Free");
+                // println!("[-] Disable Free");
                 enabled = false;
                 i += next_dont.unwrap().end();
                 continue;
             }
         } else {
             if next_do != None {
-                println!("[+] Enable");
+                // println!("[+] Enable");
                 enabled = true;
                 i += next_do.unwrap().end();
                 continue;
