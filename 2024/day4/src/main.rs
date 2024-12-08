@@ -10,7 +10,7 @@ fn main() {
     }
 
     println!("Part 1 : {}", pt1(&args[1]));
-    pt2(&args[1]);
+    println!("Part 2 : {}", pt2(&args[1]));
 }
 
 fn read_lines(filename: &str) -> Vec<String> {
@@ -124,6 +124,22 @@ fn look_for_christmas(lines : &Vec<String>, line: usize, index : usize, next_cha
     return false;
 }
 
+fn look_for_x_mas(lines : &Vec<String>, line: usize, index : usize) -> bool {
+    if lines[line - 1].chars().nth(index - 1).unwrap() == 'M' && lines[line + 1].chars().nth(index + 1).unwrap() == 'S' {
+        if lines[line - 1].chars().nth(index + 1).unwrap() == 'M' && lines[line + 1].chars().nth(index - 1).unwrap() == 'S' || 
+            lines[line - 1].chars().nth(index + 1).unwrap() == 'S' && lines[line + 1].chars().nth(index - 1).unwrap() == 'M' {
+            return true;
+        }
+    } else if lines[line - 1].chars().nth(index - 1).unwrap() == 'S' && lines[line + 1].chars().nth(index + 1).unwrap() == 'M' {
+        if lines[line - 1].chars().nth(index + 1).unwrap() == 'M' && lines[line + 1].chars().nth(index - 1).unwrap() == 'S' || 
+           lines[line - 1].chars().nth(index + 1).unwrap() == 'S' && lines[line + 1].chars().nth(index - 1).unwrap() == 'M' {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 fn pt1(filename : &str) -> i32{
     let lines = read_lines(filename);
     let mut i : usize = 0;
@@ -175,6 +191,29 @@ fn pt1(filename : &str) -> i32{
     return total;
 }
 
-fn pt2(filename : &str) {
-    let _lines = read_lines(filename);
+fn pt2(filename : &str) -> i32 {
+    let lines = read_lines(filename);
+
+    let mut i : usize = 0;
+    let mut total = 0;
+
+    while i < lines.len() {
+        let width = lines[i].chars().count();
+        let mut ch = 0;
+        while ch < lines[i].chars().count() {
+            if i > 0 && i < lines[i].chars().count() - 1 && ch > 0 && ch < width - 1 {
+                if lines[i].chars().nth(ch).unwrap() == 'A' {
+                    if look_for_x_mas(&lines, i, ch) {
+                        total += 1;
+                    }
+                }
+            }
+         
+            ch += 1;
+        }
+
+        i += 1;
+    }
+
+    return total;
 }
