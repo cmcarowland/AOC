@@ -6,6 +6,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("Please enter file path for data set");
+        return;
     }
 
     println!("Star 1: {}", pt1(&args[1]));
@@ -72,7 +73,7 @@ fn pt1(filename : &str) -> i64 {
 
 fn concat(start : u64, addin : u64) -> u64 {
     let mut base : u64 = 1;
-    while addin > base {
+    while addin >= base {
         base *= 10;
     }
 
@@ -81,7 +82,6 @@ fn concat(start : u64, addin : u64) -> u64 {
 }
 
 fn is_valid(start : u64, total : u64, operands : &VecDeque<u64>, mut index : usize) -> bool {
-    // println!("Start : {}", start);
     if index == operands.len() {
         // println!("End : {}", start);
         if start == total {
@@ -90,8 +90,9 @@ fn is_valid(start : u64, total : u64, operands : &VecDeque<u64>, mut index : usi
             return false;
         }
     }
-
+    
     let other = operands[index];
+    // println!("Start : {} {}", start, other);
     index += 1;
     return 
         is_valid(start + other, total, operands, index) ||
@@ -110,66 +111,10 @@ fn pt2(filename : &str) -> u64 {
         let operands : VecDeque<u64> = split[1].trim().split(' ').map(|x| x.parse::<u64>().unwrap()).collect();
         if is_valid(operands[0], total, &operands, 1) {
             answer += total;
-            // println!("Valid {}", line);
+            // println!("Valid {}", answer);
         } else {
             // println!("Invalid {}", line);
         }
-        
-
-        // // let mut bit_map: Vec<i8> = vec![0; split[1].trim().split(' ').count()];
-
-        // // while bit_map.iter().map(|x| u64::from(*x as u16)).sum::<u64>() != (bit_map.len() * 2) as u64 {
-        // while *bit_map.last().unwrap() != 3 {
-        //     // println!("{}", bit_map.iter().map(|x| u64::from(*x as u16)).sum::<u64>());
-        //     let mut operands : VecDeque<u64> = split[1].trim().split(' ').map(|x| x.parse::<u64>().unwrap()).collect();
-        //     let mut operation = 0;
-        //     // println!("{:?}", bit_map);
-        //     while operands.len() > 1 {
-        //         let first = operands.pop_front().unwrap();
-                
-        //         if bit_map[operation] == 0 {
-        //             // println!("{} * {} = {}", first, operands[0], operands[0] * first);
-        //             operands[0] *= first;
-        //         } else if bit_map[operation] == 1 {
-        //             // println!("{} + {} = {}", first, operands[0], operands[0] + first);
-        //             operands[0] += first;
-        //         } else if bit_map[operation] == 2 {
-        //             let mut base : u64 = 1;
-        //             while operands[0] > base {
-        //                 base *= 10;
-        //             }
-
-        //             // println!("{} || {} = {}", first * base, operands[0], base * first + operands[0]);
-        //             operands[0] += first * base;
-        //         }
-
-        //         operation += 1;
-        //     }
-            
-            
-        //     if operands[0] == total {
-        //         // println!("Ans: {} {:?} {:?}", total, operands, bit_map);                
-        //         answer += operands[0];
-        //         break;
-        //     } else {
-        //         let mut index = 0;
-        //         loop {
-        //             bit_map[index] += 1;
-        //             if bit_map[index] != 3 {
-        //                 break;
-        //             } else if bit_map[index] == 3 && index < bit_map.len() - 1{
-        //                 bit_map[index] = 0;
-        //             }
-        //             index += 1;
-        //             if index == bit_map.len() {
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
-        // if *bit_map.last().unwrap() == 2 {
-        //     // println!("Skipped: {} {:?}", line, bit_map);    
-        // }
     }
 
     return answer;
