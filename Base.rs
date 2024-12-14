@@ -5,10 +5,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("Please enter file path for data set");
+        return;
     }
 
-    pt1(&args[1]);
-    pt2(&args[1]);
+    println!("Star 1: {}", pt1(&args[1]));
+    println!("Star 2 : {}", pt2(&args[1]));
 }
 
 fn read_lines(filename: &str) -> Vec<String> {
