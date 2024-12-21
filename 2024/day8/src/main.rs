@@ -8,6 +8,7 @@ use map::map_data::MapData;
 use map::map_data::Vector2;
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "FULL");
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("Please enter file path for data set");
@@ -51,7 +52,7 @@ fn pt1(filename : &str) -> i64 {
     let mut annodeLocations : HashMap<Vector2, usize>= HashMap::new();
     let mut map = MapData::new(lines.len() as i32, lines[0].len() as i32);
     map.create_grid(&lines);
-    map.print_map();
+    // map.print_map();
     find_antenna_chars(&mut unique_characters, &map);
     // println!("{:?}", unique_characters);
     for k in unique_characters.keys() {
@@ -89,15 +90,64 @@ fn pt1(filename : &str) -> i64 {
     for k in bad_keys {
         annodeLocations.remove(&k);
     }
-    println!();
     map.print_map();
-    println!();
 
     return annodeLocations.keys().len() as i64;
 }
 
+fn within_bounds(map : &MapData, loc : Vector2) -> bool {
+    return loc.x >= 0 && loc.x < map.get_width() && loc.y >= 0 && loc.y < map.get_height();
+}
+
+fn create_annodes(map : &MapData, annodeLocations : &mut HashMap<Vector2, usize>, first : Vector2, second : Vector2) {           
+    let count = annodeLocations.get(&first).unwrap_or(&0) + 1;
+    annodeLocations.insert(first.clone(), count);
+    let distance = first.dist(&second);
+    // println!("Distance from {} to {} is {}", first, second, distance);
+    let annode =  first.add(&distance.reverse());
+    // println!("Annode will be at {}", annode);
+    if within_bounds(map, annode) == true {
+        let count = annodeLocations.get(&annode).unwrap_or(&0) + 1;
+        annodeLocations.insert(annode.clone(), count);
+        create_annodes(map, annodeLocations, annode, first);
+    }
+    let annode  = second.add(&distance);
+    // println!("Annode will be at {}", second);
+    if within_bounds(map, annode) == true {
+        let count = annodeLocations.get(&annode).unwrap_or(&0) + 1;
+        annodeLocations.insert(annode.clone(), count);
+    }
+}
+
 fn pt2(filename : &str) -> i64{
     let lines = read_lines(filename);
+    let mut unique_characters : HashMap<char, usize>= HashMap::new();
+    let mut annodeLocations : HashMap<Vector2, usize>= HashMap::new();
+    let mut map = MapData::new(lines.len() as i32, lines[0].len() as i32);
+    map.create_grid(&lines);
+    map.print_map();
+    find_antenna_chars(&mut unique_characters, &map);
+    // println!("{:?}", unique_characters);
+    for k in unique_characters.keys() {
+        let antennas : Vec<Vector2> = map.find_vals(*k).iter().filter(|&x| map.get_item_from_location(*x) == *k).map(|&x| x).collect();
+        for i in 0..antennas.len() {
+            // println!("Antenna {} at : {}", *k, antennas[i]);
+            for j in 0..antennas.len() {
+                if i == j {
+                    continue;
+                }
+                
+                create_annodes(&map, &mut annodeLocations, antennas[i], antennas[j]);
+            }
+        }
 
-    return  0;
+    }
+
+    for (k,v) in annodeLocations.iter() {
+        map.set_item_at_location(*k, '#');
+    }
+
+    map.print_map();
+
+    return annodeLocations.keys().len() as i64;
 }

@@ -137,11 +137,13 @@ impl MapData {
     }
 
     pub fn print_map(&self) {
+        println!();
         for r in 0..self.height as usize {
             for c in 0..self.width as usize {
                 print!("{}", self.grid[c][r]);    
             }
             println!();
         }
+        println!();
     }
 }
