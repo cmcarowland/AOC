@@ -1,8 +1,7 @@
 mod map;
 use map::map_data::MapData;
-use map::map_data::Point;
-use map::map_data::Edge;
-use map::map_data::Section;
+use map::point::Point;
+use map::section::Section;
 use std::collections::HashMap;
 use std::fs;
 use std::env;
@@ -54,7 +53,6 @@ fn pt1(filename : &str) -> i64 {
 
 fn pt2(filename : &str) -> i64 {
     let lines = read_lines(filename);
-    let mut plots : Vec<(char, i64)> = Vec::new();
     let mut map : MapData = MapData::new(lines.len() as i32, lines[0].len() as i32);
     map.create_grid(&lines);
    

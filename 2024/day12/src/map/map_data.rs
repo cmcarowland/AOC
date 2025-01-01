@@ -1,65 +1,9 @@
-use std::collections::{hash_set, HashSet};
-use std::fmt::{self, Debug};
-use std::hash::{Hash, Hasher};
-use std::ops;
-use std::cmp::Ordering;
+use std::collections::HashSet;
+use std::fmt;
 
-#[derive(Hash)]
-pub struct Point {
-    pub x : i32,
-    pub y : i32,
-}
-
-impl Copy for Point { }
-
-impl Clone for Point {
-    fn clone(&self) -> Point {
-        *self
-    }
-}
-
-impl fmt::Display for Point {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
-    }
-}
-
-impl Eq for Point {}
-
-impl PartialEq for Point {
-    fn eq(&self, other: &Self) -> bool {
-        self.x == other.x && self.y == other.y
-    }
-}
-
-impl Ord for Point {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.x.cmp(&other.x).then_with(|| self.y.cmp(&other.y))
-    }
-}
-
-impl PartialOrd for Point {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl ops::Add<Point> for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Point {
-        Point {
-            x: self.x + other.x,
-            y: self.y + other.y
-        }
-    }
-}
-
-impl Point {
-    pub const fn new(x: i32, y: i32) -> Self {
-        Self { x, y }
-    }
-}
+use super::Point;
+use super::Edge;
+use super::Section;
 
 pub struct MapData {
     height : i32,
@@ -185,9 +129,7 @@ impl MapData {
                     section.members.insert(right);
                 }
             } else {
-                let mut e = Edge::new(Point::new(current_pos.x + 1, current_pos.y), Point::new(current_pos.x + 1, current_pos.y + 1));
-                e.add_id(unsafe { get_id() });
-                edges.insert(e);
+                edges.insert(Edge::new(Point::new(current_pos.x + 1, current_pos.y), Point::new(current_pos.x + 1, current_pos.y + 1)));
             }
 
             if self.look_left(&current_pos) {
@@ -200,9 +142,7 @@ impl MapData {
                     section.members.insert(left);
                 }
             } else {
-                let mut e = Edge::new(Point::new(current_pos.x, current_pos.y), Point::new(current_pos.x, current_pos.y + 1));
-                e.add_id(unsafe { get_id() });
-                edges.insert(e);
+                edges.insert(Edge::new(Point::new(current_pos.x, current_pos.y), Point::new(current_pos.x, current_pos.y + 1)));
             }
 
             if self.look_up(&current_pos) {
@@ -215,9 +155,7 @@ impl MapData {
                     section.members.insert(up);
                 }
             } else {
-                let mut e = Edge::new(Point::new(current_pos.x, current_pos.y), Point::new(current_pos.x + 1, current_pos.y));
-                e.add_id(unsafe { get_id() });
-                edges.insert(e);
+                edges.insert(Edge::new(Point::new(current_pos.x, current_pos.y), Point::new(current_pos.x + 1, current_pos.y)));
 
             }
 
@@ -231,16 +169,12 @@ impl MapData {
                     section.members.insert(down);
                 }
             } else {
-                let mut e = Edge::new(Point::new(current_pos.x, current_pos.y + 1), Point::new(current_pos.x + 1, current_pos.y + 1));
-                e.add_id(unsafe { get_id() });
-                edges.insert(e);
+                edges.insert(Edge::new(Point::new(current_pos.x, current_pos.y + 1), Point::new(current_pos.x + 1, current_pos.y + 1)));
             }
 
             self.checked.push(current_pos);
         }
 
-        // self.draw_edges(&edges);
-        unsafe { inc_id(); }
         section.edges = edges.clone();
         return edges;
     }
@@ -312,178 +246,5 @@ impl fmt::Display for MapData {
         }
 
         Ok(())
-    }
-}
-
-static mut ID : u64 = 0;
-
-unsafe fn get_id() -> u64 {
-    ID
-}
-
-unsafe fn inc_id() {
-    ID += 1;
-}
-
-#[derive(Clone)]
-pub struct Edge {
-    start : Point,
-    end : Point,
-    gid : u64,
-}
-
-impl Hash for Edge {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.start.hash(state);
-        self.end.hash(state);
-    }
-}
-
-impl Edge {
-    fn new(start: Point, end: Point) -> Edge {
-        Edge {
-            start,
-            end,
-            gid: 0,
-        }
-    }
-
-
-    pub fn get_gid(&self) -> u64 {
-        self.gid
-    }
-
-    pub fn add_id(&mut self, id : u64) {
-        self.gid = id;
-    }
-
-    pub fn get_start(&self) -> Point {
-        self.start
-    }
-
-    pub fn get_end(&self) -> Point {
-        self.end
-    }
-
-    pub fn direction(&self) -> Point {
-        Point::new((self.end.x - self.start.x).abs(), (self.end.y - self.start.y).abs())
-    }
-
-    pub fn change_direction(&self, other : &Edge) -> bool {
-        let diff = self.direction() + other.direction();
-        // println!("{}", diff);
-
-        if diff.x > 0 && diff.y > 0 {
-            return true;
-        }
-
-        return false;
-    }
-}
-
-impl Eq for Edge {}
-
-impl PartialEq for Edge {
-    fn eq(&self, other: &Self) -> bool {
-        self.start == other.start && self.end == other.end
-    }
-}
-
-impl Ord for Edge {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.start.cmp(&other.start).then_with(|| self.end.cmp(&other.end))
-    }
-}
-
-impl PartialOrd for Edge {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl fmt::Display for Edge {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {}) ID: {:?}", self.start, self.end, self.gid)
-    }
-}
-
-pub struct Section {
-    c : char,
-    location : Point,
-    pub members : HashSet<Point>,
-    pub edges : HashSet<Edge>,
-}
-
-impl Section {
-    pub fn new(c : char, location : Point) -> Section {
-        Section {
-            c,
-            location,
-            members : {
-                let mut set = HashSet::new();
-                set.insert(location);
-                set
-            },
-            edges : HashSet::new(),
-        }
-    }
-
-    pub fn get_plot(&self) -> char {
-        self.c
-    }
-
-    pub fn calculate_area(&self) -> i64 {
-        self.members.len() as i64
-    }
-
-    pub fn calculate_perimeter(&self) -> i64 {
-        self.edges.len() as i64
-    }
-
-    pub fn calculate_sides(&self) -> i64 {
-        let mut edges : Vec<&Edge> = self.edges.iter().collect();
-        edges.sort();
-
-        let mut sides = 0;
-        let mut processed: Vec<&Edge> = Vec::new();
-        let mut index = 0;
-        let mut current_edge = edges[index];
-
-        while processed.len() < edges.len() {
-            let mut pos : Option<usize> = None;
-            if processed.contains(&current_edge) {
-                pos = edges.iter().position(|x| !processed.contains(x));
-                if pos.is_none() {
-                    println!("Disconnected Edge {}", current_edge);
-                    break;
-                }
-                
-                current_edge = edges[pos.unwrap()];
-                continue;
-            }
-
-            pos = edges.iter().position(|x| 
-                *x != current_edge && 
-                (x.get_start() == current_edge.get_end() || x.get_end() == current_edge.get_end())
-            );
-
-            let i = pos.unwrap();
-        
-            if current_edge.change_direction(edges[i]) {
-                sides += 1;
-            }    
-            
-            processed.push(current_edge);
-            index = i;
-            current_edge = edges[i];
-        }
-        
-        return sides;
-    }
-}
-
-impl Debug for Section {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Section: {} Area: {}", self.c, self.calculate_area())
     }
 }
