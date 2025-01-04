@@ -1,7 +1,7 @@
 use std::env;
 use std::fmt;
 use std::fs;
-use std::io::stdin;
+use std::collections::VecDeque;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -25,12 +25,25 @@ fn read_lines(filename: &str) -> Vec<String> {
 }
 
 struct Memory {
-    pub reg_a : i64,
-    pub reg_b : i64,
-    pub reg_c : i64,
+    pub reg_a : u64,
+    pub reg_b : u64,
+    pub reg_c : u64,
     pub ip : usize,
-    pub instructions : Vec<i64>,
-    pub out : Vec<i64>,
+    pub instructions : Vec<u64>,
+    pub out : Vec<u64>,
+}
+
+impl Clone for Memory {
+    fn clone(&self) -> Memory {
+        Memory {
+            reg_a : self.reg_a,
+            reg_b : self.reg_b,
+            reg_c : self.reg_c,
+            ip: self.ip,
+            instructions : self.instructions.clone(),
+            out : self.out.clone(),
+        }
+    }
 }
 
 impl Memory {
@@ -43,6 +56,32 @@ impl Memory {
             instructions : Vec::new(),
             out : Vec::new(),
         }
+    }
+    
+    fn parse(lines : &Vec<String>) -> Memory {
+        let mut memory = Memory::new();
+
+        for line in lines {
+            if line == "" {
+                continue;
+            } else if line.contains("Register") {
+                let split = line.split(":").collect::<Vec<&str>>();
+                if split[0].contains('A') {
+                    memory.reg_a = split[1].trim().parse::<u64>().unwrap();
+                } else if split[0].contains('B') {
+                    memory.reg_b = split[1].trim().parse::<u64>().unwrap();
+                } else if split[0].contains('C') {
+                    memory.reg_c = split[1].trim().parse::<u64>().unwrap();
+                }
+            } else {
+                let split = line.split(":").collect::<Vec<&str>>();
+                memory.instructions = split[1].trim().split(",")
+                    .map(|x| x.parse::<u64>().unwrap())
+                    .collect::<Vec<u64>>();
+            }
+        }
+
+        memory
     }
 
     pub fn step(&mut self) -> bool {
@@ -69,7 +108,28 @@ impl Memory {
         return true;
     }
 
-    fn get_combo(&self) -> i64 {
+    pub fn run_to_jmp(&mut self, val : u64) {
+        self.reg_a = val;
+        while self.ip < self.instructions.len() {
+            let opcode = self.instructions[self.ip];
+
+            match opcode {
+                0 => self.adv(),
+                1 => self.bxl(),
+                2 => self.bst(),
+                3 => return,
+                4 => self.bxc(),
+                5 => self.out(),
+                6 => self.bdv(),
+                7 => self.cdv(),
+                _ => { 
+                    println!("Invalid opcode {}", opcode);
+                }
+            }
+        }
+    }
+
+    fn get_combo(&self) -> u64 {
         if self.instructions[self.ip + 1] < 4{
             return self.instructions[self.ip + 1];
         } else if self.instructions[self.ip + 1] < 7 {
@@ -88,7 +148,7 @@ impl Memory {
     //performs division with reg A as the numerator and denominator is 2 to the power of the combo operand
     fn adv(&mut self) {
         let combo = self.get_combo();
-        let denominator = 2i64.pow(combo as u32);
+        let denominator = 2u64.pow(combo as u32);
         self.reg_a = self.reg_a / denominator;
         self.ip += 2;
     }
@@ -132,7 +192,7 @@ impl Memory {
     /* The bdv instruction (opcode 6) works exactly like the adv instruction except that the result is stored in the B register. (The numerator is still read from the A register.) */
     fn bdv(&mut self) {
         let combo = self.get_combo();
-        let denominator = 2i64.pow(combo as u32);
+        let denominator = 2u64.pow(combo as u32);
         self.reg_b = self.reg_a / denominator;
         self.ip += 2;
     }
@@ -140,7 +200,7 @@ impl Memory {
     /* The cdv instruction (opcode 7) works exactly like the adv instruction except that the result is stored in the C register. (The numerator is still read from the A register.) */
     fn cdv(&mut self) {
         let combo = self.get_combo();
-        let denominator = 2i64.pow(combo as u32);
+        let denominator = 2u64.pow(combo as u32);
         self.reg_c = self.reg_a / denominator;
         self.ip += 2;
     }
@@ -152,8 +212,6 @@ impl fmt::Display for Memory {
     }
 }
 
-
-
 /*
 Combo operands 0 through 3 represent literal values 0 through 3.
 Combo operand 4 represents the value of register A.
@@ -164,44 +222,111 @@ Combo operand 7 is reserved and will not appear in valid programs.
 
 fn pt1(filename : &str) -> String {
     let lines = read_lines(filename);
-    let mut memory = Memory::new();
+    let mut memory = Memory::parse(&lines);
 
-    for line in lines {
-        if line == "" {
-            continue;
-        } else if line.contains("Register") {
-            let split = line.split(":").collect::<Vec<&str>>();
-            if split[0].contains('A') {
-                memory.reg_a = split[1].trim().parse::<i64>().unwrap();
-            } else if split[0].contains('B') {
-                memory.reg_b = split[1].trim().parse::<i64>().unwrap();
-            } else if split[0].contains('C') {
-                memory.reg_c = split[1].trim().parse::<i64>().unwrap();
-            }
-        } else {
-            let split = line.split(":").collect::<Vec<&str>>();
-            memory.instructions = split[1].trim().split(",")
-                .map(|x| x.parse::<i64>().unwrap())
-                .collect::<Vec<i64>>();
-        }
-    }
-
-    println!("{}", memory);
-    // let mut s = String::new();
-    while memory.step() {
-        // println!("{}", memory);
-        // stdin().read_line(&mut s);
-    }    
-
-    println!("Program complete");
-    println!("{}", memory);
-    println!("{:?}", memory.out);
+    while memory.step() {}    
 
     return memory.out.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
 }
 
-fn pt2(filename : &str) -> i64 {
-    let lines = read_lines(filename);
+fn check_value(val : u64, mut memory : Memory) -> bool {
+    memory.reg_a = val;
+    while memory.step() {
+        if memory.out.len() > 0 {
+            
+            for i in 0..memory.instructions.len() {
+                if i >= memory.out.len() {
+                    break;
+                }
+                
+                if memory.out[i] != memory.instructions[i] {
+                    // if memory.out.len() >= 5 {
+                        // let mut s = String::new();
+                        println!("Val {} {:#018b} {:?}", val, val, memory.out);
+                        // let _ = stdin().read_line(&mut s);
+                    // }
+                    return false;
+                }
+            }
+        }
+    }
 
-    return 0;
+    if memory.out.len() != memory.instructions.len() {
+        return false;
+    }
+
+    println!("Program complete");
+    println!("{}", memory);
+    println!("{:?}", memory.out);
+    return true;
 }
+
+fn calc(va  : u64, cur : u64) -> Option<u64> {
+    let mut reg_a = va;
+    // 2,4 : reg_b = reg_a % 8
+    let mut reg_b = reg_a % 8;
+    // 1,1 : reg_b XOR 1
+    reg_b ^= 1;
+    // 7,5 : reg_c = reg_a / 2 ^ reg_b
+    let reg_c = reg_a / 2u64.pow(reg_b as u32);
+    // 1,5 : reg_b XOR 5
+    reg_b ^= 5;
+    // 4,0 : reg_b XOR reg_c
+    reg_b ^= reg_c;
+
+    // 0,3 : reg_a / 2 ^ 3
+    reg_a /= 8;
+
+    // 5,5 : add reg_b % 8 to output
+    if reg_b % 8 == cur {
+        return Some(reg_a);
+    }
+
+    return None;
+}
+
+fn pt2(filename : &str) -> u64 {
+    let lines = read_lines(filename);
+    let memory = Memory::parse(&lines);
+    let mut i = 0;
+    let mut stack : VecDeque<(u64, u64)> = VecDeque::new();
+    let mut possibles : Vec<u64> = Vec::new();
+    
+    stack.push_front((0, 15));
+    while stack.len() > 0 {
+        i = 0;
+        // println!("Poppng {} ", stack.len());
+        let (val, gate) = stack.pop_front().unwrap();
+        while i < 8 {
+        //  Running throught the memory program
+            // let mut current = memory.clone();
+            // current.run_to_jmp(val + i);
+            // if current.reg_b % 8 == memory.instructions[gate as usize] {
+            //     if gate == 0 {
+            //         possibles.push(val + i);
+            //     }
+            //     if gate > 0 {
+            //         stack.push_front(((val + i) << 3,gate - 1));
+            //     }
+            // }
+
+        // Using reverse engineered function
+            let current = calc(val + i, memory.instructions[gate as usize]);
+            if current != None {
+                if gate == 0  {
+                    possibles.push(val + i);
+                    
+                } else {
+                    stack.push_front(((val + i) << 3, gate - 1));
+                }                
+            }
+
+            i += 1;
+        }
+    }
+
+    possibles.sort();
+    println!("{:?}", possibles);
+    return possibles[0];
+}
+
