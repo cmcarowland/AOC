@@ -22,12 +22,12 @@ fn read_lines(filename: &str) -> Vec<String> {
     result
 }
 
-fn check_line(line : &str, patterns : &Vec<&str>, possible_designs : &mut Vec<String>) -> bool {
+fn check_line(line : &str, patterns : &Vec<&str>) -> bool {
     let mut end = line.len();
     for pattern in patterns.iter() {
         if line.to_string().ends_with(pattern) {
             if (end - pattern.len()) as i64 > 0 {
-                if check_line(&line[..end - pattern.len()], patterns, possible_designs) {
+                if check_line(&line[..end - pattern.len()], patterns) {
                     return true;
                 }
             } else {
@@ -42,27 +42,16 @@ fn check_line(line : &str, patterns : &Vec<&str>, possible_designs : &mut Vec<St
 fn pt1(filename : &str) -> i64 {
     let lines = read_lines(filename);
     let mut patterns = lines[0].split(",").map(|x| x.trim()).collect::<Vec<&str>>();
-    patterns.sort_by(|a, b| b.len().cmp(&a.len()));
-    println!("{:?}", patterns);
-    // return 0;
-    let mut possible_designs : Vec<String> = Vec::new();
     let mut total = 0;
+    
+    patterns.sort_by(|a, b| b.len().cmp(&a.len()));
 
     for line in lines[2..].iter() {
         let max = patterns[0].len();
 
-        if !check_line(&line, &patterns, &mut possible_designs) {
-            println!("**** INVALID {}", line);
-            // let mut last = 0;
-            // for pd in possible_designs.iter() {
-            //     // println!("{}{}", String::from_utf8(vec![b' '; last as usize]).unwrap(), pd);
-            //     last += pd.len();
-            // }
-        } else {
+        if check_line(&line, &patterns) {
             total += 1;
-            println!("+++++ VALID: {}", line);
         }
-        // possible_designs.clear();
     }
 
     return total;
