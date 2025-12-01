@@ -7,7 +7,7 @@ fn main() {
         println!("Please enter file path for data set");
     }
 
-    // pt1(&args[1]);
+    pt1(&args[1]);
     pt2(&args[1]);
 }
 
@@ -52,12 +52,39 @@ fn pt1(filename : &str) {
         }
     }
 
-    println!("{}", zero_counter);
+    println!("PT1 : {}", zero_counter);
 }
 
 fn pt2(filename : &str) {
     let lines = read_lines(filename);
+    
+    let mut current_dial : i32 = 50;
+    let mut zero_counter : i32 = 0;
     for line in lines.iter() {
-        println!("{}", line);
+        if let Some((dir, mut value)) = split_first_char_and_int(line) {
+            // println!("{0} {1}", dir, value);
+            if dir == 'L' {
+                while value > 0 {
+                    current_dial = (current_dial - 1) % 100;
+                    value -= 1;
+                    if current_dial == 0 {
+                        zero_counter += 1;
+                    }
+                }
+            } else {
+                while value > 0 {
+                    current_dial = (current_dial + 1) % 100;
+                    value -= 1;
+                    if current_dial == 0 {
+                        zero_counter += 1;
+                    }
+                }
+            }    
+            // println!("Current : {}", current_dial);
+        } else {
+            println!("ERROR {}", line);
+        }
     }
+
+    println!("PT2 : {}", zero_counter);
 }
