@@ -44,6 +44,47 @@ fn test_id(id : &str) -> bool {
     true
 }
 
+fn test_id_pt2(id : &str) -> bool {
+    let length: usize = id.to_string().len();
+    if length == 1 {
+        return false;
+    }
+
+    if id.chars().nth(0).unwrap() == '0' {
+        return false;
+    }
+
+    let half_length: usize = length / 2;
+    let mut current_index: usize = 1;
+
+    while current_index <= half_length {
+        let first_part: &str = &id[0..current_index];
+        let pattern_len = first_part.len();
+        let mut match_start: usize = current_index;
+        let mut match_count: usize = 1;
+        while match_start <= length {
+            if match_start + pattern_len > length {
+                break;
+            }
+
+            let compare_part: &str = &id[match_start..match_start + pattern_len];
+            if first_part != compare_part {
+                break;
+            }
+
+            match_count += 1;
+            if match_count * pattern_len == length {
+                return true;
+            }
+            match_start += pattern_len;
+        }
+
+        current_index += 1;
+    }
+    
+    false
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
@@ -51,7 +92,7 @@ fn main() {
     }
 
     pt1(&args[1]);
-    // pt2(&args[1]);
+    pt2(&args[1]);
 }
 
 fn read_lines(filename: &str) -> Vec<IdPair> {
@@ -73,7 +114,6 @@ fn pt1(filename : &str) {
     for id in id_pairs {
         for num in &id.range {
             if test_id(num) {
-                println!("{}", num);
                 answer += num.parse::<i64>().unwrap();
             }
         }
@@ -83,8 +123,16 @@ fn pt1(filename : &str) {
 }
 
 fn pt2(filename : &str) {
-    let lines = read_lines(filename);
-    let answer : i64 = 0;
+    let id_pairs: Vec<IdPair> = read_lines(filename);
+    let mut answer : i64 = 0;
+
+    for id in id_pairs {
+        for num in &id.range {
+            if test_id_pt2(num) {
+                answer += num.parse::<i64>().unwrap();
+            }
+        }
+    }
 
     println!("PT2 : {}", answer);
 }
