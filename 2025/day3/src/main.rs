@@ -1,14 +1,16 @@
 use std::env;
 use std::fs;
 
+#[derive(Clone)]
 struct Cell{
     value : char,
+    numeric_value: i64,
     marked : bool,
 }
 
 impl Cell {
     fn new(value : char) -> Cell {
-        Cell { value, marked : false }
+        Cell { value, numeric_value: value.to_digit(10).unwrap() as i64, marked : false }
     }
 }
 
@@ -104,52 +106,84 @@ impl Bank {
             }
             current_index -= 1;
         }
+
         println!("Highest leftmost index: {} {}", highest_leftmost, highest_value);
         current_index = highest_leftmost;
-        // Iterate from current_index down to len() - 1 and find the highest 11 other values
         self.memory[current_index].marked = true;
         let mut marked_count = 1;
         let mut next_max = 9;
+   
         // while marked_count < 12 && next_max > 1 {
         //     let mut search_index = current_index + 1;
-        //     // println!("Seach Index {}", search_index);
         //     while search_index < self.memory.len() {
         //         let search_value = self.memory[search_index].value.to_digit(10).unwrap() as i64;
-        //         // println!("Searching for {} value {}", next_max, search_value);
         //         if search_value == next_max {
+        //             println!("Marked index {} with value {}", search_index, self.memory[search_index].value);
+                    
         //             self.memory[search_index].marked = true;
-        //             // println!("Marked index {} with value {}", search_index, self.memory[search_index].value);
         //             marked_count += 1;
         //             if marked_count == 12 {
         //                 break;
         //             }
         //         }
-                
+
         //         search_index += 1;
         //     }
 
         //     next_max -= 1;
         // }
-        // println!("Marked count after first pass: {} {}", marked_count, next_max);
-        // if marked_count < 12 && next_max == 1 {
-        while marked_count < 12 {
-            let mut search_index = self.memory.len() - 1;
-            while search_index > current_index {
-                let search_value = self.memory[search_index].value.to_digit(10).unwrap() as i64;
-                if search_value == next_max {
-                    // println!("Marked index {} with value {}", search_index, self.memory[search_index].value);
-                    
-                    self.memory[search_index].marked = true;
-                    marked_count += 1;
-                    if marked_count == 12 {
-                        break;
-                    }
-                }
 
-                search_index -= 1;
+        // println!("Filling remaining marks, currently at {}", marked_count);
+        // let mut search_index = self.memory.len() - 1;
+        // while marked_count < 12 && search_index > highest_leftmost {
+        //     println!("Searching index {} with value {}", search_index, self.memory[search_index].value);
+        //     if self.memory[search_index].value.to_digit(10).unwrap() as i64 == 1 {
+        //         println!("Marked index {} with value {}", search_index, self.memory[search_index].value);
+        //         self.memory[search_index].marked = true;
+        //         current_index = search_index;
+        //         marked_count += 1;
+        //     }
+
+        //     search_index -= 1;
+        // }
+
+        let mut sub_cells = self.memory[current_index..].to_vec();
+        let mut indexed_sub_cells: Vec<(usize, &mut Cell)> = sub_cells.iter_mut().enumerate().collect();
+        println!("{:?}", indexed_sub_cells.iter().map(|c| c.1.value).collect::<String>());
+    
+        // Sort by numeric_value (descending) and by index (ascending)
+        indexed_sub_cells.sort_by(|a, b| {
+            // First sort by numeric_value in descending order
+            b.1.numeric_value.cmp(&a.1.numeric_value)
+                 .then_with(|| b.0.cmp(&a.0)) // Then by index (ascending)
+        });
+
+        println!("{:?}", indexed_sub_cells.iter().map(|c| c.1.value).collect::<String>());
+        for cell in indexed_sub_cells.iter_mut() {
+            if self.memory[cell.0 + current_index].marked {
+                continue; 
             }
-            next_max -= 1;
+            println!("Marking cell at {} with value {}", cell.0 + current_index, cell.1.value);
+
+            self.memory[cell.0 + current_index].marked = true;
+            marked_count += 1;
+            if marked_count == 12 {
+                break;
+            }
         }
+
+        println!("{}", self.memory.iter().filter(|c| c.marked).map(|c| c.value).collect::<String>());
+
+        // let mut search_index = self.memory.len() - 1;
+        // while marked_count < 12 && search_index > highest_leftmost {
+        //     println!("Searching index {} with value {}", search_index, self.memory[search_index].value);
+        //     if self.memory[search_index].value.to_digit(10).unwrap() as i64 == 1 {
+        //         println!("Marked index {} with value {}", search_index, self.memory[search_index].value);
+        //         self.memory[search_index].marked = true;
+        //         current_index = search_index;
+        //         marked_count += 1;
+        //     }
+        //     search_index -= 1;
         // }
 
         max_value = self.memory.iter()
@@ -160,59 +194,6 @@ impl Bank {
             .unwrap_or(0);
        
         println!("Max Value Pt2: {}", max_value);
-        // let mut other_index = 0;
-        // let mut max_value = 0;
-        // while current_index >= 11 {
-        //     self.memory[current_index].marked = true;
-        //     println!("Current Index: {}", current_index);
-        //     other_index = current_index - 1;
-        //     println!("Other Index Start: {}", other_index);
-        //     if other_index - 10 >= 0 {
-        //         while other_index >= current_index - 10 {
-        //             println!("{}", other_index);
-        //             self.memory[other_index].marked = true;
-        //             if other_index == 0 {
-        //                 println!("Reached zero");
-        //                 break;
-        //             }
-        //             other_index -= 1;
-        //         }
-        //         println!("Marked up to index {}", self.memory.iter()
-        //             .filter(|c| c.marked)
-        //             .map(|c| c.value)
-        //             .collect::<String>().len());
-
-        //         let current_value: i64 = self.memory.iter()
-        //             .filter(|c| c.marked)
-        //             .map(|c| c.value)
-        //             .collect::<String>()
-        //             .parse::<i64>()
-        //             .unwrap_or(0);
-
-        //         println!("Current Value: {}", current_value);
-
-        //         if current_value > max_value {
-        //             max_value = current_value;
-        //         }
-
-        //         other_index = current_index - 1;
-        //         while other_index > current_index - 11 {
-        //             self.memory[other_index].marked = false;
-        //             if other_index == 0 {
-        //                 break;
-        //             }
-
-        //             other_index -= 1;
-        //         }
-        //     }
-
-        //     self.memory[current_index].marked = false;
-        //     current_index -= 1;
-        //     if current_index == 10 {
-        //         println!("Breaking out");
-        //         break;
-        //     }
-        // }
 
         max_value
     }
@@ -253,6 +234,7 @@ fn pt1(filename : &str) -> i64 {
     return answer;
 }
 
+// 167502486318468 <- too low
 fn pt2(filename : &str) -> u64 {
     let mut answer : u64= 0;
     let lines = read_lines(filename);
